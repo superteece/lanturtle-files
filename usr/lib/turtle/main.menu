@@ -1,0 +1,11 @@
+main_menu() {
+    /usr/bin/dialog --clear --no-cancel\
+    --backtitle "Turtle SSHell $VERSION_STR" \
+    --title " Main Menu" \
+    --menu "$TURTLE_ASCII" 15 50 5 \
+    Config "Configure the LAN Turtle" \
+    Modules "Module configuration" \
+    About "" \
+    Help "" \
+    Exit "" 2> /tmp/menu.out
+}

@@ -1,0 +1,80 @@
+#!/bin/bash
+show_module() {
+    module_name=$(echo $1$2$3 | sed 's/\[\]//g' | sed 's/\[X\]//g')
+    module_desc=$(/etc/turtle/modules/$module_name description)
+    module_status=$(/etc/turtle/modules/$module_name status)
+    module_autostart_status=$(/etc/turtle/modules/$module_name autostart_status)
+    
+    text="Current Status: "
+
+    [[ "$module_status" == "Running." ]] && {
+        text=$text"Started"
+        start_stop="STOP"
+    } || {
+        text=$text"Stopped"
+        start_stop="START"
+    }
+
+    text=$text"\nBootup Status: "
+    [[ $module_autostart_status == 1 ]] && {
+        text=$text"Enabled"
+        enable_disable="DISABLE"
+    } || {
+        text=$text"Disabled"
+        enable_disable="ENABLE"
+    }
+
+    text=$text"\n\n"$module_desc
+
+    /usr/bin/dialog --backtitle "Turtle SSHell $VERSION_STR" \
+    --title "Module $module_name" \
+    --cancel-label $enable_disable \
+    --ok-label "BACK"\
+    --extra-button \
+    --extra-label $start_stop\
+    --help-button \
+    --help-label "CONFIGURE" \
+    --yesno "$text" 18 60 2>&1
+
+
+    case $? in
+        1)
+            /etc/turtle/modules/$module_name $enable_disable
+            ;;
+        2)
+            /etc/turtle/modules/$module_name configure
+            ;;
+        3)
+            /etc/turtle/modules/$module_name $start_stop | /usr/bin/dialog --programbox "Press OK or CTRL+C to exit" 18 60
+            ;;
+        *)
+            return
+            ;;
+    esac
+    show_module $module_name
+}
+
+module_menu() {
+    modules=""
+    counter=0
+
+    for module in /etc/turtle/modules/*
+    do
+        modules[$counter]=$module
+        counter=$counter+1
+    done
+    
+    command='/usr/bin/dialog --backtitle "Turtle SSHell $VERSION" --title "Modules" --ok-label "SELECT" --cancel-label "BACK" --menu "" 18 72 68 '  
+    command="$command $(module-status)"
+    eval $command 2>/tmp/menu.out
+
+    case $? in
+        0)
+            show_module $(cat /tmp/menu.out && rm /tmp/menu.out)
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+    module_menu
+}

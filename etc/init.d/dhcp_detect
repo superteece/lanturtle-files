@@ -1,0 +1,12 @@
+#!/bin/bash /etc/rc.common
+
+START=99
+
+start() {
+    /usr/bin/dhcp_detect &
+}
+
+stop() {
+    killall dhcp_detect &> /dev/null
+    /etc/init.d/led reset &>/dev/null
+}

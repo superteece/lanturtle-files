@@ -1,0 +1,31 @@
+#!/bin/bash
+BASE_URL='http://lanturtle.com/updates'
+
+[[ $# == 1 ]] && {
+    VERSION=$1
+} || exit 1
+
+check_internet() {
+    ping -q -w 5 -c 1 lanturtle.com &> /dev/null && {
+        exit 0
+    } || {
+        exit 1
+    }
+}
+
+
+echo -e "Checking for updates..\n"
+sleep 1
+$(check_internet) && {
+    read remote_ver <<< $(wget -qO- "$BASE_URL/current_version" | awk -F'|' '{print $1 " " $2}')
+    [[ $remote_ver > $VERSION ]] && {
+        echo "Update found. Running."
+        sleep 1
+        wget -qO- "$BASE_URL/$remote_ver.update" | bash
+    } || {
+        echo "No update found."
+        exit 0
+    }
+} || {
+    echo -e "The LAN Turtle is currently offline. Please check your\ninternet connection."
+}

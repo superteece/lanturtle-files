@@ -1,0 +1,38 @@
+#!/usr/bin/python
+
+import time
+import os
+
+def set_brightness(brightness):
+    led_file = open("/sys/class/leds/turtle:yellow:system/brightness", "w")
+    led_file.write(brightness)
+    led_file.close()
+
+def do_led_pattern():
+    counter = 0
+    while counter <= 5:
+        set_brightness("255")
+        time.sleep(0.2)
+        set_brightness("0")
+        time.sleep(0.2)
+        set_brightness("255")
+        time.sleep(1.5)
+        set_brightness("0")
+        time.sleep(0.2)
+        counter += 1
+
+
+def main():
+    counter = 0
+    while counter <= 120:
+        if os.stat("/var/dhcp.leases").st_size != 0:
+            do_led_pattern()
+            break
+        else:
+            time.sleep(1)
+        counter += 1
+
+    os.system("/etc/init.d/led restart &> /dev/null")
+
+if __name__ == '__main__':
+    main()

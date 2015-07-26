@@ -1,0 +1,49 @@
+#!/bin/bash
+TURTLE_PATH="/usr/lib/turtle"
+VERSION="1"
+VERSION_STR="(v$VERSION)"
+TURTLE_ASCII="          .-./*)            (*\.-.\n        _/___\/  LAN TURTLE  \/___\_\n          U U     by Hak5      U U"
+
+. $TURTLE_PATH/main.menu
+. $TURTLE_PATH/config.menu
+. $TURTLE_PATH/modules.menu
+. $TURTLE_PATH/about.menu
+. $TURTLE_PATH/help.menu
+
+
+while [ -f /etc/turtle/set_pass ]
+do
+    change_password_gui
+done
+
+
+# Display main menu
+main_menu
+
+while true; do
+    result=$(cat /tmp/menu.out && rm /tmp/menu.out &>/dev/null)
+
+    case "$result" in
+        "Config")
+            config_menu
+            ;;
+        "Modules")
+            module_menu
+            ;;
+        "About")
+            about_menu
+            ;;
+        "Help")
+            help_menu
+            ;;
+        *)
+            clear
+            exit 0
+            ;;
+    esac
+
+    main_menu
+done
+
+# Clean up terminal
+clear

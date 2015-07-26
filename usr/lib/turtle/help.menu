@@ -1,0 +1,6 @@
+help_menu() {
+    /usr/bin/dialog --no-cancel\
+    --backtitle "Turtle SSHell $VERSION_STR" \
+    --title "Help" \
+    --textbox /etc/turtle/HELP 20 70 2>&1
+}

@@ -1,0 +1,46 @@
+                     LAN TURTLE
+                      by Hak5
+              .-./*)            (*\.-.
+            _/___\/              \/___\_
+              U U                  U U
+
+See http://www.LANTurtle.com for complete documentation,
+guides, articles, videos, updates, patches and modules.
+
+Welcome to the Turtle Shell - an interactive menu
+driven front end to this Linux based network utility.
+
+CONFIG
+ From the configuration menu you may manage basic aspects
+ of the LAN TURTLE such as root password, IP and MAC 
+ addresses, and check for updates.
+
+ It is highly recommended to use the update feature, 
+ especially with a new LAN Turtle as new features, bug
+ fixes, additional modules and other improcements are 
+ constantly being made.
+
+ You may also disable the turtle shell, which will 
+ prevent the interactive menu from starting upon SSH
+ connection.
+
+ From the terminal, modules may be started or stopped
+ using the syntax "start sshfs" or "stop sshfs".
+ The interactive Turtle Shell may be reached from the
+ terminal by using the "turtle" command.
+
+MODULES
+ At the core of the LAN Turtle are the modules.
+ Modules may be started, stopped, enabled for auto-
+ start, disabled from auto-starting and configured.
+
+ Some modules feature a help dialog within their
+ configuration menus.
+
+ Additional information on modules, module updates,
+ writing your own module and downloading many more
+ community contributed modules can be found from
+ http://www.LANTurtle.com
+
+
+ 

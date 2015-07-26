@@ -1,0 +1,36 @@
+#!/bin/bash
+BASE_URL='http://darren.kitchen/modules'
+wget -qO- $BASE_URL/module_list > /tmp/module_list
+
+pkglist=""
+while read pkg;
+do
+	pkg_name=$(echo $pkg | awk '{print $1}')
+	pkg_desc=$(echo $pkg | awk '{print $2}')
+	if [ ! -f /etc/turtle/modules/$pkg ]
+	then
+	        pkglist="$pkglist $pkg_name 1 off"
+	fi
+done < /tmp/module_list
+
+echo $pkglist
+
+install_modules=$(dialog --stdout --checklist 'Available Modules:' 18 72 20 $pkglist)
+
+if [ $? -eq 0 ]
+then
+        for module in $install_modules
+        do
+		module=$(echo $module | awk '{print $1}')
+		echo $module
+		exit
+		wget -qO- $BASE_URL/$module > /tmp/$module
+		echo $module >> /tmp/installed_modules
+        done
+	message=$(cat /tmp/installed_modules)
+	dialog --msgbox "Installed Modules:\n $message" 8 60
+	rm /tmp/installed_modules
+
+else
+        exit
+fi

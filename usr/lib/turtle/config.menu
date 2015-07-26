@@ -1,0 +1,180 @@
+#!/bin/bash
+
+check_for_updates() {
+    turtle_update $VERSION | /usr/bin/dialog --programbox "Press OK or CTRL+C to exit" 18 60
+}
+
+network_mac_popup() {
+
+    mac=$(ifconfig eth1 | grep HWaddr | awk '{print $5}')
+
+    /usr/bin/dialog --backtitle "Turtle SSHell $VERSION_STR" --title "MAC Changer"\
+    --ok-label "Save" --cancel-label "Random"\
+    --help-button --help-label "Cancel"\
+    --mixedform "" 7 31 1 "MAC:" 1 1 "$mac" 1 6 19 18 0 2> /tmp/mac.out
+
+
+    case $? in
+        0)
+            result=$(cat /tmp/mac.out)
+            rm /tmp/mac.out
+            change_mac $result
+            ;;
+        1)
+            change_mac "random"
+            ;;
+        *)
+            return 0
+    esac
+
+    network_mac_popup
+}
+
+network_ip_popup() {
+    /usr/bin/dialog --title "" --menu "" 15 60 4 \
+    "DHCP"      "Dynamic Network Settings (DHCP)" \
+    "Static"    "Specify Static Network Settings" \
+    "Show"      "Show Current Network Settings" \
+    "Back"      "Return to Previous Menu" 2> /tmp/net.out
+  result=$(cat /tmp/net.out && rm /tmp/net.out &>/dev/null)
+  case $result in
+    "DHCP") 
+        uci set network.wan.proto='dhcp' &>/dev/null
+        uci del network.wan.ipaddr &>/dev/null
+        uci del network.wan.netmask &>/dev/null
+        uci del network.wan.gateway &>/dev/null
+        uci del network.wan.dns &>/dev/null
+        uci commit network &>/dev/null
+        /etc/init.d/network restart
+    ;;
+    "Static")
+        /usr/bin/dialog --title "Network Settings"\
+        --ok-label "Save" --cancel-label "Cancel"\
+        --form "Network Settings\n\n" 16 60 4\
+        "IP Address"    1 1 "$net_ip"         1 14 48 0 \
+        "Netmask:"      2 1 "$net_netmask"   2 14 48 0 \
+        "Gateway:"      3 1 "$net_gateway"    3 14 48 0 \
+        "DNS:"          4 1 "$net_dns"    4 14 48 0 2>/tmp/static.out
+        case $? in
+        0)
+            cat /tmp/static.out | {
+            read -r net_ip
+            read -r net_netmask
+            read -r net_gateway
+            read -r net_dns
+            uci set network.wan.proto="static" &>/dev/null
+            uci set network.wan.ipaddr="$net_ip" &>/dev/null
+            uci set network.wan.netmask="$net_netmask" &>/dev/null
+            uci set network.wan.gateway="$net_gateway" &>/dev/null
+            uci set network.wan.dns="$net_dns" &>/dev/null
+            uci commit network &>/dev/null
+            /etc/init.d/network restart
+            };;
+        1)
+            network_ip_popup
+            ;;
+        esac
+    ;;
+    "Show")
+        /usr/bin/dialog --textbox /etc/config/network 16 60
+        network_ip_popup
+    ;;
+    "Back")
+        exit
+    ;;
+  esac
+}
+
+configure_network() {
+    [ $# == 0 ] && exit 1
+    [[ "$1" == "static" ]] && {
+        uci set network.wan.ipaddr='$2'
+        uci set network.wan.netmask='$3'
+        uci set network.wan.gateway='$4'
+        uci set network.wan.dns='$5'
+    } || {
+        uci set network.wan.proto='dhcp'
+        uci del network.wan.ipaddr
+        uci del network.wan.netmask
+        uci del network.wan.gateway
+        uci del network.wan.dns
+    }
+    uci commit network
+    /etc/init.d/network restart
+}
+
+change_mac() {
+    [ $# == 0 ] && exit 1
+
+    ifconfig eth1 down
+    [[ $1 == "random" ]] && {
+        macchanger -r eth1 &> /dev/null && {
+            [[ $# > 1 ]] && {
+                uci set network.wan.macaddr="$(ifconfig eth1 | grep HWaddr | awk '{print $5}')"
+                uci commit network
+            }
+            return 0
+        }
+    } || {
+        macchanger -m $1 eth1 &> /dev/null && {
+            [[ $# > 1 ]] && {
+                uci set network.wan.macaddr="$1"
+                uci commit network
+            }
+            return 0
+        }
+    }
+    ifconfig eth1 up
+}
+
+toggle_ssh_startup() {
+    [[ -f /etc/turtle/disable_startup ]] && {
+        rm /etc/turtle/disable_startup
+    } || {
+        touch /etc/turtle/disable_startup
+    }
+}
+
+config_menu() {
+
+    [[ -f /etc/turtle/disable_startup ]] && {
+        disable_shell="Enable turtle shell"
+        disable_shell_help="Enables startup on SSH"
+    } || {
+        disable_shell="Disable turtle shell"
+        disable_shell_help="Disables startup on SSH"
+    }
+
+    /usr/bin/dialog --backtitle "Turtle SSHell $VERSION_STR" --title "Configuration" --ok-label "SELECT" --cancel-label "BACK" --menu "" 20 70 10\
+    "Change your password" "" \
+    "Change WAN MAC address" "" \
+    "Change WAN IP settings" "" \
+    "$disable_shell" "$disable_shell_help" \
+    "Check for updates" "(requires an internet connection)" 2> /tmp/config.out
+
+
+    [[ $? == 1 || $? == 255 ]] && {
+        return 0
+    }
+
+    case $(cat /tmp/config.out && rm /tmp/config.out) in
+        "Change your password")
+            change_password_gui
+            ;;
+        "Change WAN MAC address")
+            network_mac_popup
+            ;;
+        "Change WAN IP settings")
+            network_ip_popup
+            config_menu
+            ;;
+        "Check for updates")
+            check_for_updates
+            ;;
+        "$disable_shell")
+            toggle_ssh_startup
+            ;;
+    esac
+
+    config_menu
+}

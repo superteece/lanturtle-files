@@ -1,0 +1,2 @@
+#!/bin/bash
+/etc/turtle/modules/$1 stop | at now

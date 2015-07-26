@@ -1,0 +1,51 @@
+show_eula() {
+    /usr/bin/dialog --no-cancel\
+    --backtitle "Turtle SSHell $VERSION_STR" \
+    --title "About" \
+    --textbox /etc/turtle/EULA 18 60 2>&1
+}
+
+show_license() {
+    /usr/bin/dialog --no-cancel\
+    --backtitle "Turtle SSHell $VERSION_STR" \
+    --title "About" \
+    --textbox /etc/turtle/LICENSE 18 60 2>&1
+}
+
+
+about_menu() {
+    /usr/bin/dialog --no-cancel\
+    --backtitle "Turtle SSHell $VERSION_STR" \
+    --title "About" \
+    --ok-label "BACK"\
+    --extra-button \
+    --extra-label "LICENSE"\
+    --help-button \
+    --help-label "EULA"\
+    --msgbox "\n\
+The LAN Turtle is a covert Systems Administration\n\
+and Penetration Testing tool providing stealth\n\
+remote access, network intelligence gathering,\n\
+and man-in-the-middle surveillance capabilities\n\
+through a simple graphic shell.\n \n\
+For more information and documentation\n\
+please visit http://www.LANTurtle.com\n \n\
+         .-./*)\n
+       _/___\/  \n\
+         U U  \n\
+(c) 2015 Hak5, LLC\n\
+" 18 60 2>&1
+
+    case $? in
+        2)
+            show_eula
+            ;;
+        3)
+            show_license
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+    about_menu
+}

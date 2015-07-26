@@ -1,0 +1,39 @@
+# Set hostname
+uci set system.@system[0].hostname='turtle'
+uci commit system
+echo $(uci get system.@system[0].hostname) > /proc/sys/kernel/hostname
+
+# Generate SSH Key
+ssh-keygen -N "" -f /root/.ssh/id_rsa
+
+# Disable services
+/etc/init.d/openvpn disable
+/etc/init.d/autossh disable
+/etc/init.d/ptunnel disable
+/etc/init.d/httptunnel disable
+/etc/init.d/openvpn stop
+/etc/init.d/autossh stop
+/etc/init.d/ptunnel stop
+/etc/init.d/httptunnel stop
+
+
+# Enable SSH server on boot
+/etc/init.d/sshd enable
+/etc/init.d/sshd start
+
+mkdir -p /etc/turtle/modules
+mkdir -p /etc/turtle/autostart_modules
+
+# Enable turtle init.d
+/etc/init.d/turtle enable
+/etc/init.d/turtle start
+
+# Enable DHCP Detection
+/etc/init.d/dhcp_detect enable
+/etc/init.d/dhcp_detect start
+
+
+# Cleanup rc.local file
+echo -e "\n#Add your commands above this line\nexit 0" > /etc/rc.local
+
+exit 0

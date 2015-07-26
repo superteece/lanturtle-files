@@ -1,0 +1,13 @@
+#!/bin/bash /etc/rc.common
+
+START=99
+
+mkdir -p /etc/turtle/autostart_modules
+
+start() {
+    shopt -s nullglob
+    for module in /etc/turtle/autostart_modules/*
+    do
+        $module start &>/dev/null
+    done
+}

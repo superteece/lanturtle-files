@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+EXECUTABLE=1
+DESCRIPTION=""
+PRIORITY="99"
+MODULE=$(echo $1 | awk -F '/' '{print $5}')
+MODULE_PATH=$1
+
+print_usage() {
+  echo "usage: [start|stop|enable|disable|status|configure]"
+  exit
+}
+
+[ $# -lt 2 ] && {
+  print_usage
+}
+
+start() {
+  return 0
+}
+stop() {
+  return 0
+}
+enable() {
+  autostart_path="/etc/turtle/autostart_modules/"$PRIORITY-$MODULE
+  [ ! -f $autostart_path ] && {
+    ln -s $MODULE_PATH $autostart_path
+  }
+}
+disable() {
+  autostart_path="/etc/turtle/autostart_modules/"$PRIORITY-$MODULE
+  [ -f $autostart_path ] && {
+    rm $autostart_path
+  }
+}
+status() {
+  echo 0
+}
+autostartStatus() {
+    autostart_path="/etc/turtle/autostart_modules/"$PRIORITY-$MODULE
+    [ -f $autostart_path ] && {
+      echo 1
+    } || {
+      echo 0
+    }
+}
+configure() {
+  return 0
+}
+description() {
+    echo $DESCRIPTION
+}
+
+. $1
+
+
+case $(echo $2 | awk '{print tolower($0)}') in
+    "start")
+        echo -e "\n"
+        start ;;
+    "stop")
+        echo -e "\n"
+        stop ;;
+    "enable")
+        enable $1;;
+    "disable")
+        disable ;;
+    "status")
+        [[ $(status) == "1" ]] && {
+          echo "Running."
+        } || {
+          echo "Not Running."
+        }
+        ;;
+    "autostart_status")
+        autostartStatus ;;
+    "configure")
+        configure ;;
+    "description")
+        description
+        ;;
+    "module_status")
+        description
+        exit $(status)
+        ;;
+    *)
+        print_usage ;;
+esac
